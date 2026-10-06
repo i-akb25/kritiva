@@ -1,0 +1,10 @@
+{
+  "name": "KRITIVA",
+  "short_name": "KRITIVA",
+  "description": "Private, project-aware asset production.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4efe5",
+  "theme_color": "#17241e",
+  "icons": [{ "src": "/kritiva-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
