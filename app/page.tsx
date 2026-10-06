@@ -1,5 +1,11 @@
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { AiWorkshop } from "@/components/AiWorkshop";
+import { AssetAuditor } from "@/components/AssetAuditor";
+import { CompositionStudio } from "@/components/CompositionStudio";
+import { PipelineStudio } from "@/components/PipelineStudio";
+import { SvgBrandLab } from "@/components/SvgBrandLab";
+import { ThreeDModelLab } from "@/components/ThreeDModelLab";
 import { SpecificationLibrary, Workbench } from "@/components/Workbench";
 import { ArrowIcon, CheckIcon, ShieldIcon, SparkIcon } from "@/components/icons";
 
@@ -32,10 +38,17 @@ export default function Home() {
 
         <Workbench />
 
+        <PipelineStudio />
+        <SvgBrandLab />
+        <CompositionStudio />
+        <AssetAuditor />
+        <ThreeDModelLab />
+        <AiWorkshop />
+
         <section className="promise">
           <div className="promise-mark"><ShieldIcon /></div>
           <div><span className="eyebrow">THE PRIVACY PROMISE</span><h2>Your work is yours. It stays that way.</h2></div>
-          <div className="promise-copy"><p>KRITIVA has no user accounts, cloud library or hidden upload endpoint. Processing runs locally whenever browser technology makes it possible.</p><a href="/privacy">Read the plain-language privacy policy <ArrowIcon /></a></div>
+          <div className="promise-copy"><p>KRITIVA has no user accounts or cloud library. Local tools never upload files; optional AI tools are visibly separated and require consent before transfer.</p><a href="/privacy">Read the plain-language privacy policy <ArrowIcon /></a></div>
         </section>
 
         <SpecificationLibrary />

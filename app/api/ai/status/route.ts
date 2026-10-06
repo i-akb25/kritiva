@@ -1,0 +1,16 @@
+import { getAiConfiguration } from "@/lib/ai-provider";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const config = getAiConfiguration();
+  return Response.json({
+    configured: config.configured,
+    provider: config.provider,
+    retention: config.retention,
+    training: config.training,
+    transferNotice: config.configured
+      ? `Files selected for AI processing are transferred to ${config.provider}.`
+      : "No AI provider is configured. Local tools remain available.",
+  }, { headers: { "Cache-Control": "no-store" } });
+}

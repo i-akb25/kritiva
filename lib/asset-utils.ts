@@ -62,6 +62,9 @@ export type ProcessOptions = {
   mime: "image/webp" | "image/png";
   fit: "cover" | "contain";
   background?: string;
+  focalX?: number;
+  focalY?: number;
+  zoom?: number;
 };
 
 export const processImage = async (file: File, options: ProcessOptions): Promise<{ blob: Blob; width: number; height: number }> => {
@@ -107,11 +110,44 @@ export const processImage = async (file: File, options: ProcessOptions): Promise
       offsetX = (canvasWidth - drawWidth) / 2;
     }
   }
+  const zoom = Math.max(1, options.zoom ?? 1);
+  drawWidth *= zoom;
+  drawHeight *= zoom;
+  const focalX = Math.min(1, Math.max(0, options.focalX ?? 0.5));
+  const focalY = Math.min(1, Math.max(0, options.focalY ?? 0.5));
+  offsetX = (canvasWidth - drawWidth) * focalX;
+  offsetY = (canvasHeight - drawHeight) * focalY;
   context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
 
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, options.mime, options.quality));
   if (!blob) throw new Error(`Your browser cannot export ${options.mime}.`);
   return { blob, width: canvasWidth, height: canvasHeight };
+};
+
+export const optimizeImageToTarget = async (
+  file: File,
+  options: ProcessOptions,
+  targetBytes: number,
+): Promise<{ blob: Blob; width: number; height: number; quality: number; metTarget: boolean }> => {
+  let low = 0.35;
+  let high = Math.min(0.96, options.quality);
+  let best = await processImage(file, { ...options, quality: low });
+  let bestQuality = low;
+  if (best.blob.size > targetBytes) {
+    return { ...best, quality: low, metTarget: false };
+  }
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const quality = (low + high) / 2;
+    const result = await processImage(file, { ...options, quality });
+    if (result.blob.size <= targetBytes) {
+      best = result;
+      bestQuality = quality;
+      low = quality;
+    } else {
+      high = quality;
+    }
+  }
+  return { ...best, quality: bestQuality, metTarget: true };
 };
 
 export type ValidationResult = { label: string; value: string; state: "pass" | "warn" | "neutral" };

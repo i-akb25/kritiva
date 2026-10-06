@@ -4,17 +4,20 @@
 
 KRITIVA is a private, project-aware workspace for preparing production-ready website assets. It standardizes formats, dimensions, filenames and file-weight targets, then performs supported image work locally in the browser.
 
-## Current release
+## Current release · phases 2–6
 
-- Searchable specifications for images, brand files, social previews, motion, 3D, documents and structured content
-- Local PNG/JPEG/WebP inspection
-- Local WebP resize, crop, compression and download
-- Re-encoding that removes ordinary EXIF metadata
-- File validation against the selected production specification
-- Favicon, Apple Touch and PWA icon-pack generation
-- ZIP export with an ICO file, manifest snippet and usage notes
+- Batch image processing with fault isolation, automated naming and ZIP export
+- Iterative WebP/JPEG optimization to a maximum file-size target
+- Multi-output recipes, focal-point crop controls and local JSON presets
+- Project asset-package checklists for portfolios, web apps, PWAs and articles
+- Strict SVG sanitization, recoloring, variants, viewBox tightening and React output
+- Local social-cover and screenshot composition with exact-size WebP export
+- ZIP/folder asset audits with dimension, naming, duplicate and privacy checks
+- Interactive GLB preview, statistics, validation, optimization, poster and package export
+- Optional, consent-gated AI gateway including multi-view image-to-3D model reconstruction
+- Searchable asset specifications and the original image/icon preparation tools
 - Responsive layouts for phone, tablet, laptop and large desktop
-- No accounts, database, analytics, advertising cookies or file-upload API
+- No accounts, database, analytics or advertising cookies
 
 ## Architecture
 
@@ -23,8 +26,10 @@ KRITIVA is a private, project-aware workspace for preparing production-ready web
 - Plain CSS design system
 - JSZip for in-browser packages
 - Browser Canvas API for raster processing
+- Three.js for GLB preview
+- glTF Transform and meshoptimizer for local model optimization
 
-The website is statically rendered. Source files are held in browser memory and are not intentionally sent to the application server. There is no server-side processing route in this repository.
+The core studios run in the browser. Optional AI tasks are deliberately separated and use server-side proxy routes only after explicit consent. AI is disabled unless a deployment owner configures a named compatible gateway.
 
 ## Local development
 
@@ -37,7 +42,18 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
-Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SITE_URL` to the final production origin before deployment. This value is used for `robots.txt` and the sitemap.
+Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SITE_URL` to the final production origin before deployment. This value is used for `robots.txt` and the sitemap. The AI variables are optional.
+
+## Optional AI gateway
+
+KRITIVA does not bundle a paid AI service or claim that reconstruction happens locally. A compatible gateway must expose:
+
+- `POST {KRITIVA_AI_PROVIDER_URL}/generate` accepting multipart fields `task`, `prompt`, and one to five named image files
+- `GET {KRITIVA_AI_PROVIDER_URL}/jobs/:id`
+- Bearer authentication using `KRITIVA_AI_API_KEY`
+- JSON responses using `status` (`queued`, `processing`, `succeeded`, or `failed`), optional `jobId`, HTTPS `outputUrl`, `mimeType`, and `message`
+
+Configure the provider name, retention statement and training policy as environment variables. They are displayed before the user can consent. The included in-memory request limiter is a best-effort abuse control; production deployments should also use durable edge rate limiting.
 
 ## Verification
 
@@ -50,7 +66,9 @@ pnpm build
 
 ## Privacy and security decisions
 
-- Uploaded files are processed using browser APIs.
+- Files selected in local studios are processed using browser APIs and are not uploaded.
+- AI requests require a visible consent checkbox for every transfer.
+- Provider keys remain server-side, file count/type/size is validated, and output URLs must use HTTPS.
 - File previews use temporary object URLs that are revoked when replaced or unmounted.
 - Raster export is re-encoded rather than copying source bytes.
 - Files larger than 25 MB are rejected by the image preparer to reduce accidental browser-memory exhaustion.
@@ -62,7 +80,7 @@ Browser-based metadata removal is not forensic sanitisation. Colour-profile hand
 
 ## Product boundaries
 
-KRITIVA does not currently generate original AI artwork, edit SVG paths, transcode video, optimize GLB files, modify PDFs or store project libraries. The specification library covers these asset types, but the interface must not imply that unsupported processing is available.
+KRITIVA does not store project libraries, transcode video or modify PDFs. AI quality, cost and retention depend on the separately configured provider. A single-view 2D-to-3D result estimates unseen surfaces; multiple views improve the source evidence but do not guarantee geometric accuracy.
 
 ## Support
 
