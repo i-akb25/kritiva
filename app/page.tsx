@@ -1,11 +1,6 @@
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { AiWorkshop } from "@/components/AiWorkshop";
-import { AssetAuditor } from "@/components/AssetAuditor";
-import { CompositionStudio } from "@/components/CompositionStudio";
-import { PipelineStudio } from "@/components/PipelineStudio";
-import { SvgBrandLab } from "@/components/SvgBrandLab";
-import { ThreeDModelLab } from "@/components/ThreeDModelLab";
+import { ToolDirectory } from "@/components/ToolDirectory";
 import { SpecificationLibrary, Workbench } from "@/components/Workbench";
 import { ArrowIcon, CheckIcon, ShieldIcon, SparkIcon } from "@/components/icons";
 
@@ -38,12 +33,7 @@ export default function Home() {
 
         <Workbench />
 
-        <PipelineStudio />
-        <SvgBrandLab />
-        <CompositionStudio />
-        <AssetAuditor />
-        <ThreeDModelLab />
-        <AiWorkshop />
+        <ToolDirectory />
 
         <section className="promise">
           <div className="promise-mark"><ShieldIcon /></div>

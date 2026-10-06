@@ -17,9 +17,9 @@ export function SiteHeader() {
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
         <nav className={open ? "main-nav is-open" : "main-nav"} aria-label="Main navigation">
-          <a href="#workspace" onClick={() => setOpen(false)}>Workspace</a>
-          <a href="#pipeline" onClick={() => setOpen(false)}>Pipeline</a>
-          <a href="#3d-lab" onClick={() => setOpen(false)}>3D Lab</a>
+          <Link href="/#workspace" onClick={() => setOpen(false)}>Workspace</Link>
+          <Link href="/#tools" onClick={() => setOpen(false)}>Tools</Link>
+          <Link href="/tools/3d" onClick={() => setOpen(false)}>3D Lab</Link>
           <Link href="/privacy" onClick={() => setOpen(false)}>Privacy</Link>
           <a className="nav-cta" href="#workspace" onClick={() => setOpen(false)}>Prepare an asset</a>
         </nav>
