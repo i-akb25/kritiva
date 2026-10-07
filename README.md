@@ -4,7 +4,7 @@
 
 KRITIVA is a private, project-aware workspace for preparing production-ready website assets. It standardizes formats, dimensions, filenames and file-weight targets, then performs supported image work locally in the browser.
 
-## Current release · phases 2–6
+## Current release 
 
 - Batch image processing with fault isolation, automated naming and ZIP export
 - Iterative WebP/JPEG optimization to a maximum file-size target
