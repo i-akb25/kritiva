@@ -14,7 +14,7 @@ KRITIVA is a private, project-aware workspace for preparing production-ready web
 - Local social-cover and screenshot composition with exact-size WebP export
 - ZIP/folder asset audits with dimension, naming, duplicate and privacy checks
 - Interactive GLB preview, statistics, validation, optimization, poster and package export
-- Optional, consent-gated AI gateway including multi-view image-to-3D model reconstruction
+- Optional, consent-gated AI gateway plus single-image local 2D-to-3D reconstruction
 - Personal local-compute choices for NVIDIA, Apple Silicon, Intel and AMD, plus a clearly labelled NVIDIA hosted prototype adapter
 - Searchable asset specifications and the original image/icon preparation tools
 - Responsive layouts for phone, tablet, laptop and large desktop
@@ -60,6 +60,8 @@ Configure the provider name, retention statement and training policy as environm
 Set `KRITIVA_AI_MODE=nvidia-prototype` with a private server-side `NVIDIA_API_KEY` to try NVIDIA's hosted TRELLIS endpoint. This mode is deliberately labelled development-only and currently exposes text-to-3D only: NVIDIA's hosted preview API does not accept arbitrary personal image uploads. Never commit the key or expose this mode as a public unlimited service.
 
 Set `KRITIVA_AI_MODE=local-compute` to use the private adapter in [`connectors/local-rtx-connector`](connectors/local-rtx-connector). Both KRITIVA and the connector must run on the same computer; Vercel cannot reach services on a user's localhost. The connector binds to `127.0.0.1`, requires a bearer token and can use NVIDIA TRELLIS NIM or Stable Fast 3D.
+
+Follow [`instructions.md`](instructions.md) for the complete NVIDIA, Apple Silicon, Intel and AMD setup.
 
 Stable Fast 3D provides CUDA acceleration, experimental Apple Silicon MPS support and a CPU fallback for Intel and AMD machines. CPU generation is substantially slower. AMD ROCm acceleration is not advertised because Stable Fast 3D does not officially validate it. NVIDIA currently documents 12 GB VRAM as the minimum and 24 GB as recommended for TRELLIS NIM on Ampere-or-newer GPUs running Linux or WSL2.
 

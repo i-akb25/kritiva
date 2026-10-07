@@ -18,7 +18,7 @@ The Stable Fast 3D weights are gated on Hugging Face. Accept its terms and authe
 
 ## Install a model engine first
 
-For Stable Fast 3D, follow its official installation instructions, then set `SF3D_REPO_PATH` to that repository. For `nvidia-nim`, install and start NVIDIA's TRELLIS NIM at the configured URL.
+For Stable Fast 3D, follow its official installation instructions, then set `SF3D_REPO_PATH` to that repository and `SF3D_PYTHON` to the Python executable in its virtual environment. For `nvidia-nim`, install and start NVIDIA's TRELLIS NIM at the configured URL. See the repository's [`instructions.md`](../../instructions.md) for complete operating-system-specific setup.
 
 ## Run the connector
 
@@ -30,6 +30,7 @@ pip install -r requirements.txt
 export KRITIVA_LOCAL_CONNECTOR_TOKEN="your-long-random-token"
 export KRITIVA_LOCAL_ENGINE="auto"
 export SF3D_REPO_PATH="/absolute/path/to/stable-fast-3d"
+export SF3D_PYTHON="/absolute/path/to/stable-fast-3d/.venv/bin/python"
 uvicorn server:app --host 127.0.0.1 --port 8787
 ```
 

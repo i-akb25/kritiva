@@ -15,7 +15,7 @@ export async function GET() {
     local: config.local,
     transferNotice: config.configured
       ? config.local
-        ? "Requests stay on this computer and are sent only to the loopback RTX connector."
+        ? "Requests stay on this computer and are sent only to the loopback Local Compute Connector."
         : `Files selected for AI processing are transferred to ${config.provider}.`
       : "No AI provider is configured. Local tools remain available.",
   }, { headers: { "Cache-Control": "no-store" } });

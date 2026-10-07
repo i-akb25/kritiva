@@ -55,7 +55,7 @@ export function AiWorkshop() {
   }, [result?.jobId, result?.status]);
 
   const availableTools = status?.capabilities?.length ? tools.filter(([value]) => status.capabilities.includes(value)) : tools;
-  const slots = tool === "text-to-3d" ? [] : tool === "image-to-3d" ? [["front", "Front view · required"], ["left", "Left view · optional"], ["right", "Right view · optional"], ["rear", "Rear view · optional"], ["top", "Top view · optional"]] : [["source", "Source image · required"]];
+  const slots = tool === "text-to-3d" ? [] : tool === "image-to-3d" ? status?.local ? [["front", "Front view · required"]] : [["front", "Front view · required"], ["left", "Left view · optional"], ["right", "Right view · optional"], ["rear", "Rear view · optional"], ["top", "Top view · optional"]] : [["source", "Source image · required"]];
   const sourceReady = tool === "text-to-3d" ? Boolean(prompt.trim()) : Boolean(files[tool === "image-to-3d" ? "front" : "source"]);
 
   async function submit() {
@@ -85,7 +85,7 @@ export function AiWorkshop() {
         <div className="ai-disclosure">
           <span className={status?.configured ? "provider-state ready" : "provider-state"}>{status?.configured ? "Provider ready" : "Provider not configured"}</span>
           <h3>{tool === "image-to-3d" ? "Photographs → textured GLB" : tool === "text-to-3d" ? "Prompt → experimental GLB" : tools.find(([value]) => value === tool)?.[1]}</h3>
-          <p>{tool === "image-to-3d" ? "A single photograph requires the AI to estimate unseen geometry. Add side, rear and top views for a more accurate model." : tool === "text-to-3d" ? "NVIDIA’s hosted TRELLIS trial is for temporary personal prototyping. Availability, limits and terms can change without notice." : "The source is processed by the configured provider and the result is returned to this session."}</p>
+          <p>{tool === "image-to-3d" ? status?.local ? "The local connector currently uses one front image. SF3D estimates every unseen surface, so inspect the resulting geometry before use." : "A single photograph requires the AI to estimate unseen geometry. Add side, rear and top views for a more accurate model." : tool === "text-to-3d" ? "NVIDIA’s hosted TRELLIS trial is for temporary personal prototyping. Availability, limits and terms can change without notice." : "The source is processed by the configured provider and the result is returned to this session."}</p>
           <dl><div><dt>Provider</dt><dd>{status?.provider || "Checking…"}</dd></div><div><dt>Retention</dt><dd>{status?.retention || "Checking…"}</dd></div><div><dt>Training policy</dt><dd>{status?.training || "Checking…"}</dd></div></dl>
           {!status?.configured && <div className="notice">AI remains disabled until the deployment owner names and configures a compatible provider. No upload is attempted.</div>}
           {status?.developmentOnly && <div className="notice">Development only · never depend on this trial endpoint for production.</div>}

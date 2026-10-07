@@ -1,4 +1,4 @@
-"""Private loopback adapter between KRITIVA and a local NVIDIA TRELLIS NIM."""
+"""Private loopback adapter between KRITIVA and a local 3D model engine."""
 
 import base64
 import os
@@ -17,10 +17,11 @@ TOKEN = os.environ.get("KRITIVA_LOCAL_CONNECTOR_TOKEN") or os.environ.get("KRITI
 NIM_URL = os.environ.get("TRELLIS_NIM_URL", "http://127.0.0.1:8000/v1/infer")
 ENGINE = os.environ.get("KRITIVA_LOCAL_ENGINE", "auto")
 SF3D_REPO = Path(os.environ.get("SF3D_REPO_PATH", "")).expanduser()
+SF3D_PYTHON = os.environ.get("SF3D_PYTHON", sys.executable)
 ALLOWED_ORIGINS = [item.strip() for item in os.environ.get("KRITIVA_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") if item.strip()]
 MAX_IMAGE_BYTES = 12 * 1024 * 1024
 
-app = FastAPI(title="KRITIVA Local RTX Connector", docs_url=None, redoc_url=None)
+app = FastAPI(title="KRITIVA Local Compute Connector", docs_url=None, redoc_url=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -101,7 +102,7 @@ def run_sf3d(image_bytes: bytes, suffix: str, engine: str) -> str:
         output_path = work / "output"
         source_path.write_bytes(image_bytes)
         command = [
-            sys.executable, str(runner), str(source_path), "--output-dir", str(output_path),
+            SF3D_PYTHON, str(runner), str(source_path), "--output-dir", str(output_path),
             "--device", device, "--texture-resolution", "1024",
         ]
         environment = os.environ.copy()
@@ -116,6 +117,8 @@ def run_sf3d(image_bytes: bytes, suffix: str, engine: str) -> str:
             )
         except subprocess.TimeoutExpired as error:
             raise HTTPException(status_code=504, detail="Stable Fast 3D exceeded the 30-minute local limit") from error
+        except OSError as error:
+            raise HTTPException(status_code=503, detail=f"Could not start SF3D_PYTHON: {error}") from error
         if completed.returncode != 0:
             detail = (completed.stderr or completed.stdout or "Stable Fast 3D failed")[-800:]
             raise HTTPException(status_code=502, detail=detail)
