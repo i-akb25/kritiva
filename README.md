@@ -26,8 +26,7 @@ KRITIVA is a private, project-aware workspace for preparing production-ready web
 - Plain CSS design system
 - JSZip for in-browser packages
 - Browser Canvas API for raster processing
-- Three.js for GLB preview
-- glTF Transform and meshoptimizer for local model optimization
+- Three.js for GLB preview, local mesh simplification and standards-compliant binary re-export
 
 The core studios run in the browser. Optional AI tasks are deliberately separated and use server-side proxy routes only after explicit consent. AI is disabled unless a deployment owner configures a named compatible gateway.
 

@@ -2,11 +2,7 @@
 
 import JSZip from "jszip";
 import { useEffect, useRef, useState } from "react";
-import type { AnimationMixer, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
-import { WebIO } from "@gltf-transform/core";
-import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
-import { center, dedup, flatten, prune, quantize, reorder, simplify, weld } from "@gltf-transform/functions";
-import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
+import type { AnimationClip, AnimationMixer, BufferGeometry, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
 import { bytesToSize, downloadBlob, safeFilename } from "@/lib/asset-utils";
 import { DownloadIcon, ShieldIcon, UploadIcon } from "./icons";
 
@@ -31,6 +27,7 @@ export function ThreeDModelLab() {
   const rendererRef = useRef<WebGLRenderer | null>(null);
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const mixerRef = useRef<AnimationMixer | null>(null);
+  const animationsRef = useRef<AnimationClip[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [buffer, setBuffer] = useState<ArrayBuffer | null>(null);
   const [stats, setStats] = useState<ModelStats>(emptyStats);
@@ -92,6 +89,7 @@ export function ThreeDModelLab() {
         const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
         if (memory && memory <= 4 && triangles > 75_000) warnings.push("This model may be heavy for low-memory mobile devices.");
         setStats({ triangles, meshes, materials: materials.size, textures: textures.size, animations: gltf.animations.length, dimensions: [size.x, size.y, size.z], extensions: container.extensions, warnings });
+        animationsRef.current = gltf.animations;
         if (gltf.animations.length) { const mixer = new THREE.AnimationMixer(gltf.scene); gltf.animations.forEach((clip) => mixer.clipAction(clip).play()); mixerRef.current = mixer; }
       }, (error) => setMessage(error instanceof Error ? error.message : "The model could not be decoded."));
       const clock = new THREE.Clock();
@@ -102,7 +100,7 @@ export function ThreeDModelLab() {
       return () => resize.disconnect();
     };
     let cleanupResize: (() => void) | undefined; initialize().then((value) => { cleanupResize = value; });
-    return () => { disposed = true; cancelAnimationFrame(frame); cleanupResize?.(); controls?.dispose(); mixerRef.current?.stopAllAction(); mixerRef.current = null; rendererRef.current?.dispose(); rendererRef.current?.domElement.remove(); sceneRef.current = null; modelRef.current = null; };
+    return () => { disposed = true; cancelAnimationFrame(frame); cleanupResize?.(); controls?.dispose(); mixerRef.current?.stopAllAction(); mixerRef.current = null; animationsRef.current = []; rendererRef.current?.dispose(); rendererRef.current?.domElement.remove(); sceneRef.current = null; modelRef.current = null; };
   }, [buffer]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const receive = async (selected: File) => {
@@ -112,13 +110,37 @@ export function ThreeDModelLab() {
   };
 
   const optimize = async () => {
-    if (!buffer || !file) return; setBusy(true); setMessage(null);
+    if (!buffer || !file || !modelRef.current) { setMessage("Wait for the model preview to finish loading before optimizing."); return; }
+    setBusy(true); setMessage(null);
     try {
-      await Promise.all([MeshoptEncoder.ready, MeshoptSimplifier.ready]);
-      const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
-      const document = await io.readBinary(new Uint8Array(buffer));
-      await document.transform(center(), dedup(), flatten(), weld(), simplify({ simplifier: MeshoptSimplifier, ratio, error: .001 }), reorder({ encoder: MeshoptEncoder }), prune(), quantize());
-      const bytes = await io.writeBinary(document); const blob = new Blob([bytes as BlobPart], { type: "model/gltf-binary" });
+      const THREE = await import("three");
+      const [{ GLTFExporter }, { SimplifyModifier }] = await Promise.all([
+        import("three/examples/jsm/exporters/GLTFExporter.js"),
+        import("three/examples/jsm/modifiers/SimplifyModifier.js"),
+      ]);
+      const model = modelRef.current.clone(true);
+      const modifier = new SimplifyModifier();
+      const removable: Object3D[] = [];
+      const meshes: Array<Object3D & { isMesh?: boolean; geometry: BufferGeometry }> = [];
+      model.traverse((object) => {
+        if (object.type.endsWith("Camera") || object.type.endsWith("Light")) { removable.push(object); return; }
+        const mesh = object as Object3D & { isMesh?: boolean; geometry?: BufferGeometry };
+        const positions = mesh.geometry?.getAttribute("position");
+        if (!mesh.isMesh || !mesh.geometry || !positions || positions.count < 100) return;
+        meshes.push(mesh as Object3D & { isMesh?: boolean; geometry: BufferGeometry });
+      });
+      for (const mesh of meshes) {
+        const positions = mesh.geometry.getAttribute("position");
+        const removeCount = Math.max(0, Math.floor(positions.count * (1 - ratio)));
+        if (removeCount > 0) mesh.geometry = await modifier.modify(mesh.geometry.clone(), removeCount);
+      }
+      removable.forEach((object) => object.parent?.remove(object));
+      const bounds = new THREE.Box3().setFromObject(model); const center = bounds.getCenter(new THREE.Vector3());
+      model.position.x -= center.x; model.position.z -= center.z; model.position.y -= bounds.min.y;
+      const exporter = new GLTFExporter();
+      const output = await exporter.parseAsync(model, { binary: true, onlyVisible: true, truncateDrawRange: true, animations: animationsRef.current });
+      if (!(output instanceof ArrayBuffer)) throw new Error("The browser exporter did not produce a binary GLB.");
+      const blob = new Blob([output], { type: "model/gltf-binary" });
       setOptimized({ blob, before: file.size, after: blob.size }); setMessage(blob.size < file.size ? "Optimization completed. Review the model visually before publishing." : "Structural optimization completed, but this model did not become smaller.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "This model uses features the browser optimizer could not preserve safely."); }
     setBusy(false);
@@ -134,7 +156,7 @@ export function ThreeDModelLab() {
     if (!file) return; const base = safeFilename(file.name).replace(/\.glb$/i, ""); const zip = new JSZip();
     zip.file(`${base}/${base}.glb`, optimized?.blob ?? file); if (poster) zip.file(`${base}/poster.webp`, poster);
     zip.file(`${base}/model-metadata.json`, JSON.stringify({ filename: `${base}.glb`, generatedAt: new Date().toISOString(), bytes: optimized?.after ?? file.size, ...stats }, null, 2));
-    zip.file(`${base}/optimization-report.json`, JSON.stringify({ originalBytes: file.size, optimizedBytes: optimized?.after ?? null, ratioRequested: ratio, structuralTransforms: ["center", "dedup", "flatten", "weld", "simplify", "reorder", "prune", "quantize"] }, null, 2));
+    zip.file(`${base}/optimization-report.json`, JSON.stringify({ originalBytes: file.size, optimizedBytes: optimized?.after ?? null, ratioRequested: ratio, structuralTransforms: ["remove cameras and lights", "simplify mesh geometry", "centre on X/Z axes", "ground on Y axis", "re-export GLB"] }, null, 2));
     zip.file(`${base}/usage-snippet.tsx`, `import { useGLTF } from "@react-three/drei";\n\nexport function Model(props: JSX.IntrinsicElements["group"]) {\n  const { scene } = useGLTF("/${base}.glb");\n  return <primitive object={scene} {...props} />;\n}\n\nuseGLTF.preload("/${base}.glb");\n`);
     downloadBlob(await zip.generateAsync({ type: "blob", compression: "DEFLATE" }), `${base}-web-package.zip`);
   };
