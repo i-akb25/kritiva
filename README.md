@@ -14,6 +14,7 @@ KRITIVA is a private, project-aware workspace for preparing production-ready web
 - Local social-cover and screenshot composition with exact-size WebP export
 - ZIP/folder asset audits with dimension, naming, duplicate and privacy checks
 - Interactive GLB preview, statistics, validation, optimization, poster and package export
+- Anonymous online image generation through an optional Cloudflare Workers AI deployment mode
 - Optional, consent-gated AI gateway plus single-image local 2D-to-3D reconstruction
 - Personal local-compute choices for NVIDIA, Apple Silicon, Intel and AMD, plus a clearly labelled NVIDIA hosted prototype adapter
 - Searchable asset specifications and the original image/icon preparation tools
@@ -30,6 +31,8 @@ KRITIVA is a private, project-aware workspace for preparing production-ready web
 - Three.js for GLB preview, local mesh simplification and standards-compliant binary re-export
 
 The core studios run in the browser. Optional AI tasks are deliberately separated and use server-side proxy routes only after explicit consent. AI is disabled unless a deployment owner configures a named compatible gateway.
+
+Use [`HOSTED_AI_SETUP.md`](HOSTED_AI_SETUP.md) for public Vercel image generation, local-only image-to-3D and the temporary NVIDIA text-to-3D prototype.
 
 ## Local development
 
@@ -54,6 +57,10 @@ KRITIVA does not bundle a paid AI service or claim that reconstruction happens l
 - JSON responses using `status` (`queued`, `processing`, `succeeded`, or `failed`), optional `jobId`, HTTPS `outputUrl`, `mimeType`, and `message`
 
 Configure the provider name, retention statement and training policy as environment variables. They are displayed before the user can consent. The included in-memory request limiter is a best-effort abuse control; production deployments should also use durable edge rate limiting.
+
+### Cloudflare-hosted image generation
+
+Set `KRITIVA_AI_MODE=cloudflare-images` with a Cloudflare Account ID, Workers AI API token and AI Gateway ID to enable prompt-based image generation on the public Vercel deployment. The default allowlisted model is FLUX.2 Klein 4B, with FLUX.1 Schnell available as a compatibility option. Credentials remain server-side, visitors do not create accounts, and no generated-image library is stored by KRITIVA. Follow [`HOSTED_AI_SETUP.md`](HOSTED_AI_SETUP.md) before enabling public use.
 
 ### Personal local-compute and NVIDIA prototype modes
 
@@ -90,7 +97,7 @@ Browser-based metadata removal is not forensic sanitisation. Colour-profile hand
 
 ## Product boundaries
 
-KRITIVA does not store project libraries, transcode video or modify PDFs. AI quality, cost and retention depend on the separately configured provider. A single-view 2D-to-3D result estimates unseen surfaces; multiple views improve the source evidence but do not guarantee geometric accuracy.
+KRITIVA does not store project libraries, transcode video or modify PDFs. AI quality, quota, cost and provider-side handling depend on the separately configured provider. The local 2D-to-3D connector currently uses one front image and estimates unseen surfaces; it does not guarantee geometric accuracy.
 
 ## Support
 

@@ -323,6 +323,7 @@ textarea { font: inherit; }
 .ai-disclosure dl { margin: 24px 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .ai-disclosure dl div { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 11px; border-bottom: 1px solid var(--line); font-size: .7rem; }.ai-disclosure dl div:last-child { border-bottom: 0; }.ai-disclosure dt { color: var(--ink-soft); }.ai-disclosure dd { margin: 0; font-weight: 700; }
 .ai-result { margin-top: 18px; padding: 15px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); }.ai-result p { color: var(--ink-soft); font-size: .7rem; }.ai-result .secondary-button { min-height: 40px; font-size: .7rem; }
+.ai-image-preview { display: block; width: 100%; height: auto; max-height: 520px; margin: 14px 0; border: 1px solid var(--line); border-radius: 10px; object-fit: contain; background: var(--paper-deep); }
 .tool-page { min-height: 75vh; }
 .tool-page .studio-section { padding-top: 82px; }
 .tool-card-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }

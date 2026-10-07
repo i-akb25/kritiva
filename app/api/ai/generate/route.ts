@@ -1,7 +1,8 @@
-import { getAiConfiguration, isAiTask, normalizeNvidiaResult, safeProviderResult } from "@/lib/ai-provider";
+import { getAiConfiguration, isAiTask, isPromptOnlyTask, normalizeCloudflareImageResult, normalizeNvidiaResult, safeProviderResult, type AiTask } from "@/lib/ai-provider";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const windows = new Map<string, { count: number; started: number }>();
 
@@ -14,6 +15,16 @@ function allowed(ip: string) {
   }
   current.count += 1;
   return current.count <= 5;
+}
+
+function imagePrompt(task: AiTask, prompt: string) {
+  const instructions: Partial<Record<AiTask, string>> = {
+    "image-generation": "Create a polished production-ready image from this brief:",
+    "background-generation": "Create a clean website background without text, logos, watermarks or interface elements from this brief:",
+    "illustration-variants": "Create a refined editorial website illustration without text or watermarks from this brief:",
+    "icon-concepts": "Create one centered icon concept on a plain neutral background, without text or watermarks, from this brief:",
+  };
+  return `${instructions[task] || "Create an image from this brief:"} ${prompt}`.slice(0, 1800);
 }
 
 export async function POST(request: Request) {
@@ -38,8 +49,27 @@ export async function POST(request: Request) {
     }
 
     const prompt = String(incoming.get("prompt") || "").trim();
-    if (task === "text-to-3d" && !prompt) return Response.json({ error: "A text prompt is required." }, { status: 400 });
-    if (task !== "text-to-3d" && !files.length) return Response.json({ error: "At least one source image is required." }, { status: 400 });
+    if (isPromptOnlyTask(task) && !prompt) return Response.json({ error: "A text prompt is required." }, { status: 400 });
+    if (!isPromptOnlyTask(task) && !files.length) return Response.json({ error: "At least one source image is required." }, { status: 400 });
+
+    if (config.mode === "cloudflare-images") {
+      if (files.length) return Response.json({ error: "This hosted image mode accepts prompts only and does not upload source files." }, { status: 400 });
+      const response = await fetch(config.baseUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+          "Content-Type": "application/json",
+          "cf-aig-gateway-id": config.gatewayId,
+        },
+        body: JSON.stringify({ model: config.model, input: { prompt: imagePrompt(task, prompt) } }),
+        signal: AbortSignal.timeout(55_000),
+      });
+      if (!response.ok) {
+        const detail = (await response.text()).replace(/\s+/g, " ").slice(0, 240);
+        throw new Error(`Cloudflare image generation failed (${response.status})${detail ? `: ${detail}` : "."}`);
+      }
+      return Response.json(normalizeCloudflareImageResult(await response.json()), { headers: { "Cache-Control": "no-store" } });
+    }
 
     if (config.mode === "nvidia-prototype") {
       const response = await fetch(config.baseUrl, {

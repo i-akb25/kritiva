@@ -6,7 +6,7 @@ const tools = [
   { href: "/tools/composer", phase: "PHASE 4", title: "Composition studio", description: "Create Open Graph images, covers, social banners and screenshot frames at exact dimensions.", mode: "Local" },
   { href: "/tools/auditor", phase: "PHASE 5", title: "Asset auditor", description: "Inspect a project ZIP or permitted folder for missing, invalid, duplicate and privacy-sensitive assets.", mode: "Local" },
   { href: "/tools/3d", phase: "3D LAB", title: "GLB model lab", description: "Preview, validate, simplify and package glTF 2.0 binary models without uploading them.", mode: "Local" },
-  { href: "/tools/ai", phase: "PHASE 6", title: "Optional AI workshop", description: "Consent-gated image tasks and multi-view 2D image to textured GLB reconstruction.", mode: "Provider" },
+  { href: "/tools/ai", phase: "PHASE 6", title: "Optional AI workshop", description: "Hosted image generation, local-only 2D image to GLB and a temporary text-to-3D developer prototype.", mode: "Provider" },
 ] as const;
 
 export function ToolDirectory() {

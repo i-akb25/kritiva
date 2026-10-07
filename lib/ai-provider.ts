@@ -1,4 +1,5 @@
 export const AI_TASKS = [
+  "image-generation",
   "background-removal",
   "upscale",
   "object-removal",
@@ -10,10 +11,24 @@ export const AI_TASKS = [
 ] as const;
 
 export type AiTask = (typeof AI_TASKS)[number];
-export type AiMode = "gateway" | "local-compute" | "local-rtx" | "nvidia-prototype";
+export type AiMode = "gateway" | "cloudflare-images" | "local-compute" | "local-rtx" | "nvidia-prototype";
+
+export const PROMPT_ONLY_TASKS: AiTask[] = [
+  "image-generation",
+  "background-generation",
+  "illustration-variants",
+  "icon-concepts",
+  "text-to-3d",
+];
 
 const NVIDIA_TRELLIS_URL = "https://ai.api.nvidia.com/v1/genai/microsoft/trellis";
 const NVIDIA_STATUS_URL = "https://integrate.api.nvidia.com/v1/status";
+const CLOUDFLARE_AI_URL = "https://api.cloudflare.com/client/v4/accounts";
+const CLOUDFLARE_DEFAULT_MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
+const CLOUDFLARE_IMAGE_MODELS = new Set([
+  CLOUDFLARE_DEFAULT_MODEL,
+  "@cf/black-forest-labs/flux-1-schnell",
+]);
 
 function validUrl(value: string | undefined, protocols: string[]) {
   if (!value) return undefined;
@@ -27,7 +42,25 @@ function validUrl(value: string | undefined, protocols: string[]) {
 
 export function getAiConfiguration() {
   const requestedMode = process.env.KRITIVA_AI_MODE;
-  const mode: AiMode = requestedMode === "local-compute" || requestedMode === "local-rtx" || requestedMode === "nvidia-prototype" ? requestedMode : "gateway";
+  const mode: AiMode = requestedMode === "cloudflare-images" || requestedMode === "local-compute" || requestedMode === "local-rtx" || requestedMode === "nvidia-prototype" ? requestedMode : "gateway";
+
+  if (mode === "cloudflare-images") {
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
+    const apiKey = process.env.CLOUDFLARE_API_TOKEN?.trim();
+    const requestedModel = process.env.KRITIVA_CLOUDFLARE_IMAGE_MODEL?.trim();
+    const model = requestedModel && CLOUDFLARE_IMAGE_MODELS.has(requestedModel) ? requestedModel : CLOUDFLARE_DEFAULT_MODEL;
+    const gatewayId = process.env.CLOUDFLARE_AI_GATEWAY_ID?.trim() || "default";
+    const validAccount = Boolean(accountId && /^[a-f0-9]{32}$/i.test(accountId));
+    return {
+      mode, configured: Boolean(validAccount && apiKey), baseUrl: validAccount ? `${CLOUDFLARE_AI_URL}/${accountId}/ai/run` : undefined,
+      statusUrl: undefined, apiKey, model, gatewayId,
+      provider: model === CLOUDFLARE_DEFAULT_MODEL ? "Cloudflare Workers AI · FLUX.2 Klein 4B" : "Cloudflare Workers AI · FLUX.1 Schnell",
+      retention: process.env.KRITIVA_AI_RETENTION || "KRITIVA does not store generated images",
+      training: process.env.KRITIVA_AI_TRAINING_POLICY || "Review Cloudflare and model-provider terms before use",
+      capabilities: ["image-generation", "background-generation", "illustration-variants", "icon-concepts"] as AiTask[],
+      developmentOnly: false, local: false,
+    };
+  }
 
   if (mode === "nvidia-prototype") {
     const apiKey = process.env.NVIDIA_API_KEY;
@@ -76,9 +109,19 @@ export function isAiTask(value: unknown): value is AiTask {
   return typeof value === "string" && AI_TASKS.includes(value as AiTask);
 }
 
+export function isPromptOnlyTask(task: AiTask) {
+  return PROMPT_ONLY_TASKS.includes(task);
+}
+
 export function safeArtifact(value: unknown) {
   if (typeof value !== "string" || value.length < 16 || value.length > 100 * 1024 * 1024) return undefined;
   const cleaned = value.replace(/^data:model\/gltf-binary;base64,/, "");
+  return /^[A-Za-z0-9+/=\r\n]+$/.test(cleaned) ? cleaned.replace(/[\r\n]/g, "") : undefined;
+}
+
+export function safeImageArtifact(value: unknown) {
+  if (typeof value !== "string" || value.length < 16 || value.length > 20 * 1024 * 1024) return undefined;
+  const cleaned = value.replace(/^data:image\/(?:png|jpeg|webp);base64,/, "");
   return /^[A-Za-z0-9+/=\r\n]+$/.test(cleaned) ? cleaned.replace(/[\r\n]/g, "") : undefined;
 }
 
@@ -101,8 +144,24 @@ export function safeProviderResult(value: unknown) {
     jobId,
     outputUrl,
     artifactBase64: safeArtifact(input.artifactBase64),
+    imageBase64: safeImageArtifact(input.imageBase64),
     message: typeof input.message === "string" ? input.message.slice(0, 500) : undefined,
     mimeType: typeof input.mimeType === "string" ? input.mimeType.slice(0, 100) : undefined,
+  };
+}
+
+export function normalizeCloudflareImageResult(value: unknown) {
+  if (!value || typeof value !== "object") throw new Error("Cloudflare returned an invalid response.");
+  const envelope = value as Record<string, unknown>;
+  if (envelope.success === false) throw new Error("Cloudflare rejected the image request.");
+  const result = envelope.result && typeof envelope.result === "object" ? envelope.result as Record<string, unknown> : envelope;
+  const imageBase64 = safeImageArtifact(result.image ?? result.imageBase64);
+  if (!imageBase64) throw new Error("Cloudflare completed the request without a readable image.");
+  return {
+    status: "succeeded" as const,
+    imageBase64,
+    mimeType: "image/jpeg",
+    message: "The generated image is ready.",
   };
 }
 
