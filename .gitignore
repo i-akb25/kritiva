@@ -7,6 +7,8 @@
 /coverage
 /.next/
 /out/
+__pycache__/
+*.pyc
 
 # local files
 .DS_Store

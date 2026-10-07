@@ -9,8 +9,14 @@ export async function GET() {
     provider: config.provider,
     retention: config.retention,
     training: config.training,
+    mode: config.mode,
+    capabilities: config.capabilities,
+    developmentOnly: config.developmentOnly,
+    local: config.local,
     transferNotice: config.configured
-      ? `Files selected for AI processing are transferred to ${config.provider}.`
+      ? config.local
+        ? "Requests stay on this computer and are sent only to the loopback RTX connector."
+        : `Files selected for AI processing are transferred to ${config.provider}.`
       : "No AI provider is configured. Local tools remain available.",
   }, { headers: { "Cache-Control": "no-store" } });
 }
