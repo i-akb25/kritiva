@@ -1,4 +1,4 @@
-import { getAiConfiguration, isAiTask, isPromptOnlyTask, normalizeCloudflareImageResult, normalizeNvidiaResult, safeProviderResult, type AiTask } from "@/lib/ai-provider";
+import { buildCloudflareImageRequest, getAiConfiguration, isAiTask, isPromptOnlyTask, normalizeCloudflareImageResult, normalizeNvidiaResult, safeProviderResult, type AiTask } from "@/lib/ai-provider";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,14 +54,17 @@ export async function POST(request: Request) {
 
     if (config.mode === "cloudflare-images") {
       if (files.length) return Response.json({ error: "This hosted image mode accepts prompts only and does not upload source files." }, { status: 400 });
-      const response = await fetch(config.baseUrl, {
+      const cloudflareRequest = buildCloudflareImageRequest(
+        config.baseUrl,
+        config.apiKey,
+        config.model,
+        config.gatewayId,
+        imagePrompt(task, prompt),
+      );
+      const response = await fetch(cloudflareRequest.url, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${config.apiKey}`,
-          "Content-Type": "application/json",
-          "cf-aig-gateway-id": config.gatewayId,
-        },
-        body: JSON.stringify({ model: config.model, input: { prompt: imagePrompt(task, prompt) } }),
+        headers: cloudflareRequest.headers,
+        body: cloudflareRequest.body,
         signal: AbortSignal.timeout(55_000),
       });
       if (!response.ok) {

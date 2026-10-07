@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getAiConfiguration, isAiTask, normalizeCloudflareImageResult, normalizeNvidiaResult, safeArtifact, safeImageArtifact, safeProviderResult } from "./ai-provider";
+import { buildCloudflareImageRequest, getAiConfiguration, isAiTask, normalizeCloudflareImageResult, normalizeNvidiaResult, safeArtifact, safeImageArtifact, safeProviderResult } from "./ai-provider";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -50,5 +50,38 @@ describe("AI provider boundary", () => {
     expect(config.configured).toBe(true);
     expect(config.capabilities).toEqual(["image-generation", "background-generation", "illustration-variants", "icon-concepts"]);
     expect(config.baseUrl).toContain("0123456789abcdef0123456789abcdef/ai/run");
+  });
+
+  it("uses multipart input and the model-specific endpoint for FLUX.2 Klein", () => {
+    const request = buildCloudflareImageRequest(
+      "https://api.cloudflare.com/client/v4/accounts/account/ai/run",
+      "server-secret",
+      "@cf/black-forest-labs/flux-2-klein-4b",
+      "default",
+      "a brass engineering illustration",
+    );
+
+    expect(request.url).toContain("/ai/run/@cf/black-forest-labs/flux-2-klein-4b");
+    expect(request.body).toBeInstanceOf(FormData);
+    expect((request.body as FormData).get("prompt")).toBe("a brass engineering illustration");
+    expect(request.headers).not.toHaveProperty("Content-Type");
+    expect(request.headers).not.toHaveProperty("cf-aig-gateway-id");
+  });
+
+  it("keeps JSON gateway requests for FLUX.1 Schnell", () => {
+    const request = buildCloudflareImageRequest(
+      "https://api.cloudflare.com/client/v4/accounts/account/ai/run",
+      "server-secret",
+      "@cf/black-forest-labs/flux-1-schnell",
+      "default",
+      "a clean project cover",
+    );
+
+    expect(request.url).toBe("https://api.cloudflare.com/client/v4/accounts/account/ai/run");
+    expect(request.headers).toMatchObject({ "Content-Type": "application/json", "cf-aig-gateway-id": "default" });
+    expect(JSON.parse(request.body as string)).toMatchObject({
+      model: "@cf/black-forest-labs/flux-1-schnell",
+      input: { prompt: "a clean project cover" },
+    });
   });
 });

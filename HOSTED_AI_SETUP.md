@@ -43,6 +43,12 @@ KRITIVA_AI_RETENTION=KRITIVA does not store generated images
 KRITIVA_AI_TRAINING_POLICY=Review Cloudflare and model-provider terms before use
 ```
 
+`FLUX.2 Klein 4B` requires multipart form data and is called through Cloudflare's
+model-specific Workers AI endpoint. Cloudflare currently does not accept the AI
+Gateway header for this multipart model, so `CLOUDFLARE_AI_GATEWAY_ID` is retained
+for the allowlisted `FLUX.1 Schnell` fallback. It can remain set to `default` when
+Klein is selected.
+
 Do not add quotation marks. Do not expose these values with a `NEXT_PUBLIC_` prefix. Never commit the real API token.
 
 ### 3. Redeploy and verify

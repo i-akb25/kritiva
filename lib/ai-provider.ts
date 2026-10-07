@@ -30,6 +30,37 @@ const CLOUDFLARE_IMAGE_MODELS = new Set([
   "@cf/black-forest-labs/flux-1-schnell",
 ]);
 
+export function buildCloudflareImageRequest(
+  baseUrl: string,
+  apiKey: string,
+  model: string,
+  gatewayId: string,
+  prompt: string,
+) {
+  const headers: Record<string, string> = { Authorization: `Bearer ${apiKey}` };
+
+  if (model === CLOUDFLARE_DEFAULT_MODEL) {
+    const body = new FormData();
+    body.set("prompt", prompt);
+    body.set("width", "1024");
+    body.set("height", "1024");
+
+    return {
+      url: `${baseUrl}/${model}`,
+      headers,
+      body,
+    };
+  }
+
+  headers["Content-Type"] = "application/json";
+  headers["cf-aig-gateway-id"] = gatewayId;
+  return {
+    url: baseUrl,
+    headers,
+    body: JSON.stringify({ model, input: { prompt } }),
+  };
+}
+
 function validUrl(value: string | undefined, protocols: string[]) {
   if (!value) return undefined;
   try {
