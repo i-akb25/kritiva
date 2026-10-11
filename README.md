@@ -15,6 +15,11 @@ KRITIVA is a private, project-aware workspace for preparing production-ready web
 - ZIP/folder asset audits with dimension, naming, duplicate and privacy checks
 - Interactive GLB preview, statistics, validation, optimization, poster and package export
 - Anonymous online image generation through an optional Cloudflare Workers AI deployment mode
+- Custom generation dimensions and one-to-four prompt variations with optional deterministic seeds
+- Browser-local generated-image history, JSON backup/restore and one-click pipeline handoff
+- Local resizing and WebP, PNG or JPEG export for generated images
+- Local PDF editing for text, visual replacement, images and clickable links without DOCX conversion
+- Installable PWA shell with offline access to local tools after the first visit
 - Optional, consent-gated AI gateway plus single-image local 2D-to-3D reconstruction
 - Personal local-compute choices for NVIDIA, Apple Silicon, Intel and AMD, plus a clearly labelled NVIDIA hosted prototype adapter
 - Searchable asset specifications and the original image/icon preparation tools
@@ -97,7 +102,7 @@ Browser-based metadata removal is not forensic sanitisation. Colour-profile hand
 
 ## Product boundaries
 
-KRITIVA does not store project libraries, transcode video or modify PDFs. AI quality, quota, cost and provider-side handling depend on the separately configured provider. The local 2D-to-3D connector currently uses one front image and estimates unseen surfaces; it does not guarantee geometric accuracy.
+KRITIVA does not store cloud project libraries or transcode video. PDF Studio adds page overlays and annotations; it does not OCR, securely redact, or semantically reflow arbitrary embedded text. AI quality, quota, cost and provider-side handling depend on the separately configured provider. The local 2D-to-3D connector currently uses one front image and estimates unseen surfaces; it does not guarantee geometric accuracy.
 
 ## Support
 

@@ -5,6 +5,8 @@
 
 # tests and builds
 /coverage
+/playwright-report
+/test-results
 /.next/
 /out/
 __pycache__/

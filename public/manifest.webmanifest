@@ -1,7 +1,11 @@
 {
   "name": "KRITIVA",
   "short_name": "KRITIVA",
-  "description": "Private, project-aware asset production.",
+  "description": "Private, project-aware asset production with offline-capable local tools.",
+  "id": "/",
+  "scope": "/",
+  "orientation": "any",
+  "categories": ["design", "productivity", "utilities"],
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f4efe5",

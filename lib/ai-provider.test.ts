@@ -59,11 +59,15 @@ describe("AI provider boundary", () => {
       "@cf/black-forest-labs/flux-2-klein-4b",
       "default",
       "a brass engineering illustration",
+      { width: 1200, height: 624, seed: 42 },
     );
 
     expect(request.url).toContain("/ai/run/@cf/black-forest-labs/flux-2-klein-4b");
     expect(request.body).toBeInstanceOf(FormData);
     expect((request.body as FormData).get("prompt")).toBe("a brass engineering illustration");
+    expect((request.body as FormData).get("width")).toBe("1200");
+    expect((request.body as FormData).get("height")).toBe("624");
+    expect((request.body as FormData).get("seed")).toBe("42");
     expect(request.headers).not.toHaveProperty("Content-Type");
     expect(request.headers).not.toHaveProperty("cf-aig-gateway-id");
   });
@@ -75,13 +79,14 @@ describe("AI provider boundary", () => {
       "@cf/black-forest-labs/flux-1-schnell",
       "default",
       "a clean project cover",
+      { width: 1344, height: 768, seed: 7 },
     );
 
     expect(request.url).toBe("https://api.cloudflare.com/client/v4/accounts/account/ai/run");
     expect(request.headers).toMatchObject({ "Content-Type": "application/json", "cf-aig-gateway-id": "default" });
     expect(JSON.parse(request.body as string)).toMatchObject({
       model: "@cf/black-forest-labs/flux-1-schnell",
-      input: { prompt: "a clean project cover" },
+      input: { prompt: "a clean project cover", width: 1344, height: 768, seed: 7 },
     });
   });
 });

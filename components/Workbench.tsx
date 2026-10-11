@@ -215,7 +215,7 @@ export function Workbench() {
               <button className="primary-button full" disabled={!iconSource || busy} onClick={buildIconPack}>{busy ? "Building package…" : "Build and download ZIP"}</button>
             </div>
             <div className="output-panel pack-panel">
-              <span className="pack-mark" style={{ backgroundColor: iconBackground }}>{iconUrl && <img src={iconUrl} alt="" />}</span>
+              <svg className="pack-mark" viewBox="0 0 100 100" role="img" aria-label="Icon background preview"><rect width="100" height="100" fill={iconBackground} />{iconUrl && <image href={iconUrl} x="11" y="11" width="78" height="78" preserveAspectRatio="xMidYMid meet" />}</svg>
               <div><span className="eyebrow">7 GENERATED FILES + MANIFEST</span><h3>One source. Every essential icon.</h3><ul><li>16, 32 and 48 px favicon PNGs</li><li>Multi-size favicon.ico</li><li>Apple Touch, PWA and maskable icons</li><li>Web app manifest snippet and usage notes</li></ul></div>
             </div>
           </div>

@@ -41,6 +41,11 @@ CLOUDFLARE_AI_GATEWAY_ID=your-cloudflare-ai-gateway-id
 KRITIVA_CLOUDFLARE_IMAGE_MODEL=@cf/black-forest-labs/flux-2-klein-4b
 KRITIVA_AI_RETENTION=KRITIVA does not store generated images
 KRITIVA_AI_TRAINING_POLICY=Review Cloudflare and model-provider terms before use
+KRITIVA_AI_ENABLED=true
+KRITIVA_AI_DAILY_LIMIT=60
+KRITIVA_AI_REQUIRE_TURNSTILE=true
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
+TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 ```
 
 `FLUX.2 Klein 4B` requires multipart form data and is called through Cloudflare's
@@ -49,9 +54,18 @@ Gateway header for this multipart model, so `CLOUDFLARE_AI_GATEWAY_ID` is retain
 for the allowlisted `FLUX.1 Schnell` fallback. It can remain set to `default` when
 Klein is selected.
 
-Do not add quotation marks. Do not expose these values with a `NEXT_PUBLIC_` prefix. Never commit the real API token.
+Do not add quotation marks. Only the Turnstile site key is intentionally public; never give provider tokens or the Turnstile secret a `NEXT_PUBLIC_` prefix. Never commit real secrets.
 
-### 3. Redeploy and verify
+### 3. Protect anonymous generation with Turnstile
+
+1. In Cloudflare, open **Turnstile** and create a widget for `kritiva.vercel.app` plus any custom production domain.
+2. Choose **Managed** mode.
+3. Copy the site key into `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and the secret key into `TURNSTILE_SECRET_KEY` in Vercel.
+4. Keep `KRITIVA_AI_REQUIRE_TURNSTILE=true`. If either key is missing, KRITIVA intentionally locks generation instead of silently running unprotected.
+
+`KRITIVA_AI_ENABLED=false` is the emergency owner kill switch. `KRITIVA_AI_DAILY_LIMIT` is a process-local safety ceiling, not a durable global counter across all Vercel instances. Use Cloudflare AI Gateway limits and alerts for enforceable quota control.
+
+### 4. Redeploy and verify
 
 Environment changes do not alter an already completed deployment. In Vercel, redeploy the latest `main` commit after saving the variables.
 
@@ -61,7 +75,7 @@ Then open:
 https://kritiva.vercel.app/tools/ai
 ```
 
-The page should show **Provider ready** and list only the online image tasks. Test with a short prompt, tick the consent box, generate one image, preview it, and download it.
+The page should show **Provider ready** and list only the online image tasks. Test with a short prompt, complete the Turnstile check, tick the consent box, generate one image, preview it, resize it, download it in each required format and send it to the local pipeline.
 
 If the page still shows **Provider not configured**, verify that:
 

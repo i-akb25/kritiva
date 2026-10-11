@@ -20,6 +20,7 @@ export function SiteHeader() {
           <Link href="/#workspace" onClick={() => setOpen(false)}>Workspace</Link>
           <Link href="/#tools" onClick={() => setOpen(false)}>Tools</Link>
           <Link href="/tools/3d" onClick={() => setOpen(false)}>3D Lab</Link>
+          <Link href="/tools/pdf" onClick={() => setOpen(false)}>PDF Studio</Link>
           <Link href="/privacy" onClick={() => setOpen(false)}>Privacy</Link>
           <a className="nav-cta" href="#workspace" onClick={() => setOpen(false)}>Prepare an asset</a>
         </nav>

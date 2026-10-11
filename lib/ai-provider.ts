@@ -36,14 +36,18 @@ export function buildCloudflareImageRequest(
   model: string,
   gatewayId: string,
   prompt: string,
+  options: { width?: number; height?: number; seed?: number } = {},
 ) {
   const headers: Record<string, string> = { Authorization: `Bearer ${apiKey}` };
+  const width = Math.max(256, Math.min(1920, Math.round(options.width ?? 1024)));
+  const height = Math.max(256, Math.min(1920, Math.round(options.height ?? 1024)));
 
   if (model === CLOUDFLARE_DEFAULT_MODEL) {
     const body = new FormData();
     body.set("prompt", prompt);
-    body.set("width", "1024");
-    body.set("height", "1024");
+    body.set("width", String(width));
+    body.set("height", String(height));
+    if (Number.isInteger(options.seed)) body.set("seed", String(options.seed));
 
     return {
       url: `${baseUrl}/${model}`,
@@ -57,7 +61,7 @@ export function buildCloudflareImageRequest(
   return {
     url: baseUrl,
     headers,
-    body: JSON.stringify({ model, input: { prompt } }),
+    body: JSON.stringify({ model, input: { prompt, width, height, ...(Number.isInteger(options.seed) ? { seed: options.seed } : {}) } }),
   };
 }
 
